@@ -3,7 +3,13 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use App\Models\WishlistItem;
+use App\Mail\WishlistItemAddedMail;
+use App\Mail\WishlistItemUpdatedMail;
+
+
+
 
 class WishlistItemController extends Controller
 {
@@ -37,7 +43,7 @@ class WishlistItemController extends Controller
         return view('wishlist.create');
     }
 
-    public function store(Request $request)
+   public function store(Request $request)
     {
         $request->validate([
             'name' => 'required',
@@ -50,12 +56,14 @@ class WishlistItemController extends Controller
         $data = $request->all();
         $data['bought'] = $request->has('bought');
 
-        WishlistItem::create($data);
+        $item = WishlistItem::create($data);
 
-        return redirect('/')->with('success', 'Item added!');
+        Mail::to('gegetaro99@gmail.com')->send(new WishlistItemAddedMail($item));
+
+        return redirect('/')->with('success', 'Item added and email sent!');
     }
 
-    public function edit(WishlistItem $wishlist)
+   public function edit(WishlistItem $wishlist)
     {
         return view('wishlist.edit', compact('wishlist'));
     }
@@ -75,10 +83,14 @@ class WishlistItemController extends Controller
 
         $wishlist->update($data);
 
-        return redirect('/')->with('success', 'Item updated!');
+        // Send email notification for update
+        Mail::to('your_email@gmail.com')->send(new WishlistItemUpdatedMail($wishlist));
+
+         return redirect('/')->with('success', 'Item updated and email sent!');
     }
 
-    public function destroy(WishlistItem $wishlist)
+
+   public function destroy(WishlistItem $wishlist)
     {
         $wishlist->delete();
 
